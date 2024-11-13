@@ -1,0 +1,8 @@
+pytorch-image-models/
+rope_vit/
+rotary-embedding-torch/
+venv/
+scratch_vit.ipynb
+scratch_rotary.ipynb
+__pycache__/
+data/
