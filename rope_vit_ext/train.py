@@ -14,6 +14,7 @@ def train(trainloader, testloader, net, criterion, optimizer, lr_scheduler=None,
     
     train_metrics = {}
     test_metrics = {}
+    best_acc = 0
 
     for epoch in range(num_epochs):
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
@@ -138,6 +139,7 @@ def test_one_epoch(epoch, dataloader, net, criterion, device):
 
             # print progress
             progress.display(batch_idx)
+            break
 
     # Save checkpoint.
     acc = top1.avg
