@@ -12,6 +12,7 @@ Benchmark dataset: CIFAR10
 
 For each of the following tasks, 
 1. fine-tune ViT without RoPE
+    - vit_b_16
 2. fine-tune ViT with RoPE with 2x2 axial frequency (non-efficient way with rotational matrix)
 3. fine-tune ViT with RoPE with 2x2 axial frequency (efficient way with complex number)
 4. fine-tune ViT with RoPE with 3x3 axial frequency (non-efficient way with rotational matrix)

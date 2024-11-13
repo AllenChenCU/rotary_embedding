@@ -23,7 +23,7 @@ if __name__ == "__main__":
     #parser.add_argument("--num_workers", default=2, type=int, help="Number of dataloader workers")
     #parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer")
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
-    parser.add_argument("--run_id", default="metrics.csv", type=str, help="run id for naming the metrics files")
+    parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
     args = parser.parse_args()
 
     # Device
@@ -31,7 +31,7 @@ if __name__ == "__main__":
 
     # Data
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    batch_size = 128
+    batch_size = 64
     trainloader, testloader = prepare_cifar10(batch_size=batch_size)
 
     # Model
