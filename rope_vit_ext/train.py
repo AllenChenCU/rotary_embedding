@@ -18,7 +18,7 @@ def train(trainloader, testloader, net, criterion, optimizer, lr_scheduler=None,
     for epoch in range(num_epochs):
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
         train_metrics[str(epoch)] = train_result
-        test_result = test_one_epoch(poch, testloader, net, criterion, device)
+        test_result = test_one_epoch(epoch, testloader, net, criterion, device)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
@@ -89,6 +89,7 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
 
         # print progress
         progress.display(batch_idx)
+        break
 
     return results
 

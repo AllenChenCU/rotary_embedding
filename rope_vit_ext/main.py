@@ -8,9 +8,13 @@ import torch.optim as optim
 from torch.optim import lr_scheduler
 from torchvision import models
 import pandas as pd
+import structlog
 
 from data import prepare_cifar10
 from train import train
+
+
+logger = structlog.get_logger()
 
 
 if __name__ == "__main__":
@@ -28,6 +32,7 @@ if __name__ == "__main__":
 
     # Device
     device = torch.device("cuda:0" if torch.cuda.is_available() and args.cuda else "cpu")
+    logger.info(f"Device: {device}")
 
     # Data
     classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
