@@ -19,7 +19,7 @@ def train(trainloader, testloader, net, criterion, optimizer, lr_scheduler=None,
     for epoch in range(num_epochs):
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
         train_metrics[str(epoch)] = train_result
-        test_result = test_one_epoch(epoch, testloader, net, criterion, device)
+        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, best_acc)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
@@ -95,11 +95,10 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
     return results
 
 
-def test_one_epoch(epoch, dataloader, net, criterion, device):
+def test_one_epoch(epoch, dataloader, net, criterion, device, best_acc=0):
     logger.info(f"Testing epoch: {epoch}\n")
 
     # Config
-    global best_acc
     inference_time = AverageMeter('inference_time', ':6.4f')
     losses = AverageMeter('Loss', ':.4f')
     top1 = AverageMeter('Acc@1', ':6.2f')
@@ -163,4 +162,4 @@ def test_one_epoch(epoch, dataloader, net, criterion, device):
         "Acc@1": top1.avg, 
         # Time
         "InferenceTime": inference_time.sum, 
-    }
+    }, best_acc
