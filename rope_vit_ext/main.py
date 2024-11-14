@@ -48,7 +48,8 @@ if __name__ == "__main__":
 
     # Train Config
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    #optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
     lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     num_epochs = args.epochs
 
