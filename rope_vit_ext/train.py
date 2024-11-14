@@ -91,7 +91,6 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
 
         # print progress
         progress.display(batch_idx)
-        break
 
     return results
 
@@ -139,7 +138,6 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, best_acc=0):
 
             # print progress
             progress.display(batch_idx)
-            break
 
     # Save checkpoint.
     acc = top1.avg
