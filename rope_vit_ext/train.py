@@ -12,6 +12,7 @@ logger = structlog.get_logger()
 
 
 def train(
+    args,
     trainloader, 
     testloader, 
     net, 
@@ -20,7 +21,6 @@ def train(
     lr_scheduler=None, 
     num_epochs=5, 
     device="cpu", 
-    model_name="model", 
 ):
     
     train_metrics = {}
@@ -28,9 +28,11 @@ def train(
     best_acc = 0
 
     for epoch in range(num_epochs):
+        if args.distributed:
+            trainloader.sampler.set_epoch(epoch)
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
         train_metrics[str(epoch)] = train_result
-        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, model_name, best_acc)
+        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, args.model, best_acc)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()

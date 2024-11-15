@@ -14,6 +14,7 @@ from timm.models import create_model
 from data import build_dataset
 from train import train
 import models
+from utils import init_distributed_mode, get_world_size, get_rank
 
 
 logger = structlog.get_logger()
@@ -34,19 +35,57 @@ if __name__ == "__main__":
     parser.add_argument("--dataset", default="cifar10", type=str, help="dataset used")
     parser.add_argument("--batch_size", default=64, type=int, help="Batch size")
     parser.add_argument("--num_workers", default=2, type=int, help="number of workers for dataloader")
+    # distributed training parameters
+    parser.add_argument('--distributed', action='store_true', default=False, help='Enabling distributed training')
+    parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
+    parser.add_argument('--world_size', default=1, type=int,
+                        help='number of distributed processes')
+    parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--repeated-aug', action='store_true')
+    parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
+    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR',
+                        help='learning rate (default: 5e-4)')
+    parser.set_defaults(repeated_aug=True)
+    parser.add_argument('--unscale-lr', action='store_true')
     args = parser.parse_args()
 
     # Device
     device = torch.device("cuda:0" if torch.cuda.is_available() and args.cuda else "cpu")
     logger.info(f"Device: {device}")
+    logger.info(f"Distributed Training: {args.distributed}")
+    if args.distributed:
+        init_distributed_mode(args)
+        logger.info(f"World size: {get_world_size()}")
+        logger.info(f"Rank: {get_rank()}")
 
     # Data
     logger.info(f"Dataset: {args.dataset}")
     dataset_train, num_classes = build_dataset(is_train=True, args=args)
     dataset_val, _ = build_dataset(is_train=False, args=args)
 
-    sampler_train = torch.utils.data.RandomSampler(dataset_train)
-    sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    if args.distributed:
+        num_tasks = get_world_size()
+        global_rank = get_rank()
+        if args.repeated_aug:
+            sampler_train = RASampler(
+                dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
+            )
+        else:
+            sampler_train = torch.utils.data.DistributedSampler(
+                dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
+            )
+        if args.dist_eval:
+            if len(dataset_val) % num_tasks != 0:
+                print('Warning: Enabling distributed evaluation with an eval dataset not divisible by process number. '
+                      'This will slightly alter validation results as extra duplicate entries are added to achieve '
+                      'equal num of samples per-process.')
+            sampler_val = torch.utils.data.DistributedSampler(
+                dataset_val, num_replicas=num_tasks, rank=global_rank, shuffle=False)
+        else:
+            sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+    else:
+        sampler_train = torch.utils.data.RandomSampler(dataset_train)
+        sampler_val = torch.utils.data.SequentialSampler(dataset_val)
 
     trainloader = torch.utils.data.DataLoader(
         dataset_train, 
@@ -81,18 +120,27 @@ if __name__ == "__main__":
         img_size=224, 
     )
     model = model.to(device)
+    model_without_ddp = model
+    if args.distributed:
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+        model_without_ddp = model.module
+    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    logger.info('number of params:', n_parameters)
+    if not args.unscale_lr:
+        linear_scaled_lr = args.lr * args.batch_size * get_world_size() / 512.0
+        args.lr = linear_scaled_lr
 
     # Train Config
     logger.info(f"Training...")
     criterion = nn.CrossEntropyLoss()
     #optimizer = optim.Adam(model.parameters(), lr=0.001)
-    optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+    optimizer = optim.SGD(model_without_ddp.parameters(), lr=args.lr, momentum=0.9)
     lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     num_epochs = args.epochs
 
     # train
     train_metrics, test_metrics = train(
-        trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device, args.model,
+        args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device,
     )
 
     # save
