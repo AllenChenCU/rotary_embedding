@@ -11,7 +11,17 @@ from utils import AverageMeter, ProgressMeter
 logger = structlog.get_logger()
 
 
-def train(trainloader, testloader, net, criterion, optimizer, lr_scheduler=None, num_epochs=5, device="cpu"):
+def train(
+    trainloader, 
+    testloader, 
+    net, 
+    criterion, 
+    optimizer, 
+    lr_scheduler=None, 
+    num_epochs=5, 
+    device="cpu", 
+    model_name="model", 
+):
     
     train_metrics = {}
     test_metrics = {}
@@ -20,7 +30,7 @@ def train(trainloader, testloader, net, criterion, optimizer, lr_scheduler=None,
     for epoch in range(num_epochs):
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
         train_metrics[str(epoch)] = train_result
-        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, best_acc)
+        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, model_name, best_acc)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
@@ -95,7 +105,7 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
     return results
 
 
-def test_one_epoch(epoch, dataloader, net, criterion, device, best_acc=0):
+def test_one_epoch(epoch, dataloader, net, criterion, device, model_name="model", best_acc=0):
     logger.info(f"Testing epoch: {epoch}\n")
 
     # Config
@@ -148,9 +158,12 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, best_acc=0):
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        curr_dir = os.path.dirname(__file__)
+        save_folder = os.path.join(curr_dir, "model_registry", model_name)
+        if not os.path.isdir(save_folder):
+            os.mkdir(save_folder)
+        save_path = os.path.join(save_folder, f"{model_name}.pth")
+        torch.save(state, save_path)
         best_acc = acc
     
     return {

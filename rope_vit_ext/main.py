@@ -6,12 +6,14 @@ import torchvision
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
-from torchvision import models
+#from torchvision import models
 import pandas as pd
 import structlog
+from timm.models import create_model
 
-from data import prepare_cifar10
+from data import build_dataset
 from train import train
+import models
 
 
 logger = structlog.get_logger()
@@ -28,6 +30,10 @@ if __name__ == "__main__":
     #parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer")
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
     parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
+    parser.add_argument("--model", default="vit_small_patch16_224", type=str, help="model used")
+    parser.add_argument("--dataset", default="cifar10", type=str, help="dataset used")
+    parser.add_argument("--batch_size", default=64, type=int, help="Batch size")
+    parser.add_argument("--num_workers", default=2, type=int, help="number of workers for dataloader")
     args = parser.parse_args()
 
     # Device
@@ -35,18 +41,49 @@ if __name__ == "__main__":
     logger.info(f"Device: {device}")
 
     # Data
-    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-    batch_size = 64
-    trainloader, testloader = prepare_cifar10(batch_size=batch_size)
+    logger.info(f"Dataset: {args.dataset}")
+    dataset_train, num_classes = build_dataset(is_train=True, args=args)
+    dataset_val, _ = build_dataset(is_train=False, args=args)
+
+    sampler_train = torch.utils.data.RandomSampler(dataset_train)
+    sampler_val = torch.utils.data.SequentialSampler(dataset_val)
+
+    trainloader = torch.utils.data.DataLoader(
+        dataset_train, 
+        sampler=sampler_train, 
+        batch_size=args.batch_size, 
+        num_workers=args.num_workers,
+        pin_memory=True, 
+        drop_last=True,
+    )
+    testloader = torch.utils.data.DataLoader(
+        dataset_val, 
+        sampler=sampler_val, 
+        batch_size=args.batch_size, 
+        num_workers=args.num_workers,
+        pin_memory=True,
+        drop_last=False,
+    )
 
     # Model
-    # base model
-    model = models.vit_b_16(weights='IMAGENET1K_V1')
-    num_ftrs = model.heads.head.in_features
-    model.heads.head = nn.Linear(num_ftrs, 10)
+    logger.info(f"Model: {args.model}")
+    # model = models.vit_b_16(weights='IMAGENET1K_V1')
+    # model = models.vit_b_16()
+    # num_ftrs = model.heads.head.in_features
+    # model.heads.head = nn.Linear(num_ftrs, num_classes)
+    model = create_model(
+        args.model, 
+        pretrained=False,
+        num_classes=num_classes,
+        drop_rate=0.0, 
+        drop_path_rate=0.1, 
+        drop_block_rate=None, 
+        img_size=224, 
+    )
     model = model.to(device)
 
     # Train Config
+    logger.info(f"Training...")
     criterion = nn.CrossEntropyLoss()
     #optimizer = optim.Adam(model.parameters(), lr=0.001)
     optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
@@ -55,10 +92,11 @@ if __name__ == "__main__":
 
     # train
     train_metrics, test_metrics = train(
-        trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device
+        trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device, args.model,
     )
 
     # save
+    logger.info(f"Saving...")
     train_metrics_df1 = pd.DataFrame.from_dict(
         {
             (int(i), int(j)): train_metrics[i][j] for i in train_metrics.keys() for j in train_metrics[i].keys()
