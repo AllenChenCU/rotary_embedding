@@ -44,19 +44,19 @@ class ProgressMeter(object):
         return '[' + fmt + '/' + fmt.format(num_batches) + ']\n'
 
 
-def setup_for_distributed(is_master):
-    """
-    This function disables printing when not in master process
-    """
-    import builtins as __builtin__
-    builtin_print = __builtin__.print
+# def setup_for_distributed(is_master):
+#     """
+#     This function disables printing when not in master process
+#     """
+#     import builtins as __builtin__
+#     builtin_print = __builtin__.print
 
-    def print(*args, **kwargs):
-        force = kwargs.pop('force', False)
-        if is_master or force:
-            builtin_print(*args, **kwargs)
+#     def print(*args, **kwargs):
+#         force = kwargs.pop('force', False)
+#         if is_master or force:
+#             builtin_print(*args, **kwargs)
 
-    __builtin__.print = print
+#     __builtin__.print = print
 
 
 def init_distributed_mode(args, rank, world_size):
@@ -86,7 +86,7 @@ def init_distributed_mode(args, rank, world_size):
     torch.distributed.init_process_group(backend=args.dist_backend, #init_method=args.dist_url,
                                          world_size=args.world_size, rank=args.rank)
     torch.distributed.barrier()
-    setup_for_distributed(args.rank == 0)
+    #setup_for_distributed(args.rank == 0)
 
 
 def is_dist_avail_and_initialized():

@@ -27,6 +27,7 @@ logger = structlog.get_logger()
 def main(rank, world_size, args, train_metrics, test_metrics):
 
     logger.info(f"Distributed Training: {args.distributed}")
+    logger.info(f"Pass in rank: {rank}")
     if args.distributed:
         init_distributed_mode(args, rank, world_size)
         logger.info(f"World size: {get_world_size()}")

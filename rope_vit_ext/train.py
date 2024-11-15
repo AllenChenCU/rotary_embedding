@@ -169,7 +169,7 @@ def test_one_epoch(epoch, dataloader, net, criterion, args, best_acc=0):
         curr_dir = os.path.dirname(__file__)
         save_folder = os.path.join(curr_dir, "model_registry", args.model)
         if not os.path.isdir(save_folder):
-            os.mkdir(save_folder)
+            os.makedirs(save_folder)
         save_path = os.path.join(save_folder, f"{args.model_name}.pth")
         save_on_master(state, save_path)
         best_acc = acc
