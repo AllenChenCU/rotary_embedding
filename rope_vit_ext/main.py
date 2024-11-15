@@ -128,19 +128,38 @@ def main(rank, world_size, args, train_metrics, test_metrics):
 
     # save
     logger.info(f"Saving...")
-    train_metrics_df1 = pd.DataFrame.from_dict(
-        {
-            (int(i), int(j)): train_metrics[i][j] for i in train_metrics.keys() for j in train_metrics[i].keys()
-        }, orient="index",
-    )
-    train_metrics_df2 = (
-        train_metrics_df1
-        .reset_index(names=["epoch_num", "batch_num"])
-        .groupby("epoch_num")
-        .last()
-        [["Loss", "Total", "Correct", "Acc@1"]]
-    )
-    test_metrics_df = pd.DataFrame.from_dict(test_metrics, orient="index")
+    if args.distributed:
+        train_metrics_df1 = pd.DataFrame.from_dict(
+            {
+                (int(i), int(j), int(k)): train_metrics[i][j][k] for i in train_metrics.keys() for j in train_metrics[i].keys() for k in train_metrics[i][j].keys()
+            }, orient="index", 
+        )
+        train_metrics_df2 = (
+            train_metrics_df1
+            .reset_index(names=["epoch_num", "rank_num", "batch_num"])
+            .groupby(["epoch_num", "rank_num"])
+            .last()
+            [["Loss", "Total", "Correct", "Acc@1", "TrainingTime"]]
+        )
+        test_metrics_df = pd.DataFrame.from_dict(
+            {
+                (int(i), int(j)): test_metrics[i][j] for i in test_metrics.keys() for j in test_metrics[i].keys()
+            }, orient="index", 
+        )
+    else:
+        train_metrics_df1 = pd.DataFrame.from_dict(
+            {
+                (int(i), int(j)): train_metrics[i][j] for i in train_metrics.keys() for j in train_metrics[i].keys()
+            }, orient="index",
+        )
+        train_metrics_df2 = (
+            train_metrics_df1
+            .reset_index(names=["epoch_num", "batch_num"])
+            .groupby("epoch_num")
+            .last()
+            [["Loss", "Total", "Correct", "Acc@1", "TrainingTime"]]
+        )
+        test_metrics_df = pd.DataFrame.from_dict(test_metrics, orient="index")
 
     if not os.path.isdir(args.run_id):
         os.mkdir(args.run_id)

@@ -29,9 +29,13 @@ def train(
         if args.distributed:
             trainloader.sampler.set_epoch(epoch)
         train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, args)
-        train_metrics[str(epoch)] = train_result
         test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, args, best_acc)
-        test_metrics[str(epoch)] = test_result
+        if args.distributed:
+            train_metrics[str(epoch)][str(args.rank)] = train_result
+            test_metrics[str(epoch)][str(args.rank)] = test_result
+        else:
+            train_metrics[str(epoch)] = train_result
+            test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
     return train_metrics, test_metrics
@@ -170,7 +174,7 @@ def test_one_epoch(epoch, dataloader, net, criterion, args, best_acc=0):
         save_folder = os.path.join(curr_dir, "model_registry", args.model)
         if not os.path.isdir(save_folder):
             os.makedirs(save_folder)
-        save_path = os.path.join(save_folder, f"{args.model_name}.pth")
+        save_path = os.path.join(save_folder, f"{args.model}.pth")
         save_on_master(state, save_path)
         best_acc = acc
     
