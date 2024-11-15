@@ -153,7 +153,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="train and evaluate parser")
-    parser.add_argument("--cuda", action="store_true", help="use of cuda")
+    parser.add_argument("--cuda", action="store_true", default=False, help="use of cuda")
     parser.add_argument("--data_path", default="./data", type=str, help="file path for all data")
     parser.add_argument("--optimizer", default="sgd", type=str, help="Optimizer")
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='tcp://127.0.0.1:23456', help='url used to set up distributed training') #'env://'
-    parser.add_argument('--repeated-aug', action='store_true')
+    parser.add_argument('--repeated-aug', action='store_true', default=False)
     parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
     parser.set_defaults(repeated_aug=True)
     parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
