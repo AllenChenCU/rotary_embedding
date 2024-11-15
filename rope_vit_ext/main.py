@@ -14,7 +14,9 @@ from timm.models import create_model
 from data import build_dataset
 from train import train
 import models
-from utils import init_distributed_mode, get_world_size, get_rank
+from utils import (
+    init_distributed_mode, get_world_size, get_rank
+)
 
 
 logger = structlog.get_logger()
@@ -23,11 +25,8 @@ logger = structlog.get_logger()
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="train and evaluate parser")
-
-    # User parser.add_argument() - Documentation : https://docs.python.org/3/library/argparse.html
     parser.add_argument("--cuda", action="store_true", help="use of cuda")
     parser.add_argument("--data_path", default="./data", type=str, help="file path for all data")
-    #parser.add_argument("--num_workers", default=2, type=int, help="Number of dataloader workers")
     parser.add_argument("--optimizer", default="sgd", type=str, help="Optimizer")
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
     parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
@@ -38,19 +37,17 @@ if __name__ == "__main__":
     # distributed training parameters
     parser.add_argument('--distributed', action='store_true', default=False, help='Enabling distributed training')
     parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
+    parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
     parser.add_argument('--repeated-aug', action='store_true')
     parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
-    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR',
-                        help='learning rate (default: 5e-4)')
     parser.set_defaults(repeated_aug=True)
+    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
     parser.add_argument('--unscale-lr', action='store_true')
     args = parser.parse_args()
 
-    # Device
-    device = torch.device("cuda:0" if torch.cuda.is_available() and args.cuda else "cpu")
+    # Global Config
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     logger.info(f"Device: {device}")
     logger.info(f"Distributed Training: {args.distributed}")
     if args.distributed:

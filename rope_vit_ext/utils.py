@@ -1,5 +1,6 @@
 import os
 
+import torch
 import torch.distributed as dist
 
 class AverageMeter(object):
@@ -88,3 +89,10 @@ def get_rank():
     return dist.get_rank()
 
 
+def is_main_process():
+    return get_rank() == 0
+
+
+def save_on_master(*args, **kwargs):
+    if is_main_process():
+        torch.save(*args, **kwargs)

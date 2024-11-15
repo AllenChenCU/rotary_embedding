@@ -5,7 +5,7 @@ import structlog
 import torch
 from torch.optim import lr_scheduler
 
-from utils import AverageMeter, ProgressMeter
+from utils import AverageMeter, ProgressMeter, save_on_master
 
 
 logger = structlog.get_logger()
@@ -165,7 +165,7 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, model_name="model"
         if not os.path.isdir(save_folder):
             os.mkdir(save_folder)
         save_path = os.path.join(save_folder, f"{model_name}.pth")
-        torch.save(state, save_path)
+        save_on_master(state, save_path)
         best_acc = acc
     
     return {
