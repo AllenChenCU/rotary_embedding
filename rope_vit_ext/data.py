@@ -45,7 +45,7 @@ def build_dataset(is_train, args):
     transform = build_transform(is_train)
 
     if args.dataset == 'cifar10':
-        dataset = datasets.CIFAR10(args.data_path, train=is_train, transform=transform)
+        dataset = datasets.CIFAR10(args.data_path, download=True, train=is_train, transform=transform)
         nb_classes = 10
     elif args.dataset == 'imagenet':
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
