@@ -169,7 +169,7 @@ if __name__ == "__main__":
     parser.add_argument('--dist_url', default='tcp://127.0.0.1:23456', help='url used to set up distributed training') #'env://'
     parser.add_argument('--repeated-aug', action='store_true', default=False)
     parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
-    parser.set_defaults(repeated_aug=True)
+    #parser.set_defaults(repeated_aug=True)
     parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
     parser.add_argument('--unscale-lr', action='store_true')
     args = parser.parse_args()
