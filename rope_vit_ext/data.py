@@ -42,10 +42,10 @@ def build_transform(is_train, input_size=224):
 def build_dataset(is_train, args):
     transform = build_transform(is_train)
 
-    if args.data_set == 'cifar10':
+    if args.dataset == 'cifar10':
         dataset = datasets.CIFAR10(args.data_path, train=is_train, transform=transform)
         nb_classes = 10
-    elif args.data_set == 'imagenet':
+    elif args.dataset == 'imagenet':
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
