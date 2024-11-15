@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument("--cuda", action="store_true", help="use of cuda")
     parser.add_argument("--data_path", default="./data", type=str, help="file path for all data")
     #parser.add_argument("--num_workers", default=2, type=int, help="Number of dataloader workers")
-    #parser.add_argument("--optimizer", default="adam", type=str, help="Optimizer")
+    parser.add_argument("--optimizer", default="sgd", type=str, help="Optimizer")
     parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
     parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
     parser.add_argument("--model", default="vit_small_patch16_224", type=str, help="model used")
@@ -133,8 +133,11 @@ if __name__ == "__main__":
     # Train Config
     logger.info(f"Training...")
     criterion = nn.CrossEntropyLoss()
-    #optimizer = optim.Adam(model.parameters(), lr=0.001)
-    optimizer = optim.SGD(model_without_ddp.parameters(), lr=args.lr, momentum=0.9)
+    if args.optimizer == "sgd":
+        optimizer = optim.SGD(model_without_ddp.parameters(), lr=args.lr, momentum=0.9)
+    else:
+        optimizer = optim.Adam(model_without_ddp.parameters(), lr=args.lr)
+    
     lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     num_epochs = args.epochs
 
