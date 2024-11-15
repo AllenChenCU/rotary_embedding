@@ -59,7 +59,7 @@ def setup_for_distributed(is_master):
     __builtin__.print = print
 
 
-def init_distributed_mode(rank, world_size):
+def init_distributed_mode(args, rank, world_size):
     # if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
     #     args.rank = int(os.environ["RANK"])
     #     args.world_size = int(os.environ['WORLD_SIZE'])
@@ -72,15 +72,16 @@ def init_distributed_mode(rank, world_size):
     #     args.distributed = False
     #     return
 
-    args.distributed = True
+    #args.distributed = True
     args.gpu = rank % torch.cuda.device_count()
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
 
     torch.cuda.set_device(args.gpu)
     args.dist_backend = 'nccl'
-    print('| distributed init (rank {}): {}'.format(
-        args.rank, args.dist_url), flush=True)
+    #print('| distributed init (rank {}): {}'.format(args.rank, args.dist_url), flush=True)
+    dist_url = os.getenv("MASTER_ADDR") + ":" + os.getenv("MASTER_PORT")
+    print('| distributed init (rank {}): {}'.format(args.rank, dist_url), flush=True)
     torch.distributed.init_process_group(backend=args.dist_backend, #init_method=args.dist_url,
                                          world_size=args.world_size, rank=args.rank)
     torch.distributed.barrier()

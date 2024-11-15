@@ -28,7 +28,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
 
     logger.info(f"Distributed Training: {args.distributed}")
     if args.distributed:
-        init_distributed_mode(rank, world_size)
+        init_distributed_mode(args, rank, world_size)
         logger.info(f"World size: {get_world_size()}")
         logger.info(f"Rank: {get_rank()}")
 
