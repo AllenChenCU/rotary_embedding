@@ -20,8 +20,6 @@ def train(
     optimizer, 
     lr_scheduler=None, 
     num_epochs=5, 
-    device="cpu", 
-    rank=0, 
     train_metrics={}, 
     test_metrics={}, 
 ):
@@ -30,16 +28,16 @@ def train(
     for epoch in range(num_epochs):
         if args.distributed:
             trainloader.sampler.set_epoch(epoch)
-        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device, rank)
+        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, args)
         train_metrics[str(epoch)] = train_result
-        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, rank, args.model, best_acc)
+        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, args, best_acc)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
     return train_metrics, test_metrics
 
 
-def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device, rank):
+def train_one_epoch(epoch, dataloader, net, criterion, optimizer, args):
     logger.info(f'Training epoch: {epoch} \n')
 
     # Config
@@ -59,11 +57,11 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device, rank):
         
         # train
         if args.distributed:
-            dest = rank
+            dest = args.rank
         else:
-            dest = device
+            dest = args.device
         inputs, targets = inputs.to(dest), targets.to(dest)
-        if device == "cuda":
+        if args.device == "cuda":
             torch.cuda.synchronize()
         training_start = time.perf_counter()
         optimizer.zero_grad()
@@ -71,7 +69,7 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device, rank):
         loss = criterion(outputs, targets)
         loss.backward()
         optimizer.step()
-        if device == "cuda":
+        if args.device == "cuda":
             torch.cuda.synchronize()
         curr_time_training = time.perf_counter()
         training_time.update(curr_time_training - training_start)
@@ -111,7 +109,7 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device, rank):
     return results
 
 
-def test_one_epoch(epoch, dataloader, net, criterion, device, rank, model_name="model", best_acc=0):
+def test_one_epoch(epoch, dataloader, net, criterion, args, best_acc=0):
     logger.info(f"Testing epoch: {epoch}\n")
 
     # Config
@@ -131,16 +129,16 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, rank, model_name="
 
             # Compute
             if args.distributed:
-                dest = rank
+                dest = args.rank
             else:
-                dest = device
+                dest = args.device
             inputs, targets = inputs.to(dest), targets.to(dest)
-            if device == "cuda":
+            if args.device == "cuda":
                 torch.cuda.synchronize()
             start_time = time.perf_counter()
             outputs = net(inputs)
             loss = criterion(outputs, targets)
-            if device == "cuda":
+            if args.device == "cuda":
                 torch.cuda.synchronize()
             end_time = time.perf_counter()
             inference_time.update(end_time - start_time)
@@ -169,10 +167,10 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, rank, model_name="
             'epoch': epoch,
         }
         curr_dir = os.path.dirname(__file__)
-        save_folder = os.path.join(curr_dir, "model_registry", model_name)
+        save_folder = os.path.join(curr_dir, "model_registry", args.model)
         if not os.path.isdir(save_folder):
             os.mkdir(save_folder)
-        save_path = os.path.join(save_folder, f"{model_name}.pth")
+        save_path = os.path.join(save_folder, f"{args.model_name}.pth")
         save_on_master(state, save_path)
         best_acc = acc
     
