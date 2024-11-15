@@ -10,6 +10,8 @@ from torch.optim import lr_scheduler
 import pandas as pd
 import structlog
 from timm.models import create_model
+import torch.distributed as dist
+import torch.multiprocessing as mp
 
 from data import build_dataset
 from train import train
@@ -22,36 +24,11 @@ from utils import (
 logger = structlog.get_logger()
 
 
-if __name__ == "__main__":
+def main(rank, world_size, args, train_metrics, test_metrics):
 
-    parser = argparse.ArgumentParser(description="train and evaluate parser")
-    parser.add_argument("--cuda", action="store_true", help="use of cuda")
-    parser.add_argument("--data_path", default="./data", type=str, help="file path for all data")
-    parser.add_argument("--optimizer", default="sgd", type=str, help="Optimizer")
-    parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
-    parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
-    parser.add_argument("--model", default="vit_small_patch16_224", type=str, help="model used")
-    parser.add_argument("--dataset", default="cifar10", type=str, help="dataset used")
-    parser.add_argument("--batch_size", default=64, type=int, help="Batch size")
-    parser.add_argument("--num_workers", default=2, type=int, help="number of workers for dataloader")
-    # distributed training parameters
-    parser.add_argument('--distributed', action='store_true', default=False, help='Enabling distributed training')
-    parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
-    parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
-    parser.add_argument('--dist_url', default='tcp://127.0.0.1:23456', help='url used to set up distributed training') #'env://'
-    parser.add_argument('--repeated-aug', action='store_true')
-    parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
-    parser.set_defaults(repeated_aug=True)
-    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
-    parser.add_argument('--unscale-lr', action='store_true')
-    args = parser.parse_args()
-
-    # Global Config
-    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
-    logger.info(f"Device: {device}")
     logger.info(f"Distributed Training: {args.distributed}")
     if args.distributed:
-        init_distributed_mode(args)
+        init_distributed_mode(rank, world_size)
         logger.info(f"World size: {get_world_size()}")
         logger.info(f"Rank: {get_rank()}")
 
@@ -119,6 +96,7 @@ if __name__ == "__main__":
     model = model.to(device)
     model_without_ddp = model
     if args.distributed:
+        model = model.to(device=rank)
         model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
@@ -142,6 +120,9 @@ if __name__ == "__main__":
     train_metrics, test_metrics = train(
         args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device,
     )
+
+    if args.distributed:
+        dist.destroy_process_group()
 
     # save
     logger.info(f"Saving...")
@@ -169,3 +150,42 @@ if __name__ == "__main__":
     test_metrics_df.to_csv(test_metrics_epoch_filepath)
 
 
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="train and evaluate parser")
+    parser.add_argument("--cuda", action="store_true", help="use of cuda")
+    parser.add_argument("--data_path", default="./data", type=str, help="file path for all data")
+    parser.add_argument("--optimizer", default="sgd", type=str, help="Optimizer")
+    parser.add_argument("--epochs", default=5, type=int, help="Number of epochs for training")
+    parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
+    parser.add_argument("--model", default="vit_small_patch16_224", type=str, help="model used")
+    parser.add_argument("--dataset", default="cifar10", type=str, help="dataset used")
+    parser.add_argument("--batch_size", default=64, type=int, help="Batch size")
+    parser.add_argument("--num_workers", default=2, type=int, help="number of workers for dataloader")
+    # distributed training parameters
+    parser.add_argument('--distributed', action='store_true', default=False, help='Enabling distributed training')
+    parser.add_argument('--dist-eval', action='store_true', default=False, help='Enabling distributed evaluation')
+    parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
+    parser.add_argument('--dist_url', default='tcp://127.0.0.1:23456', help='url used to set up distributed training') #'env://'
+    parser.add_argument('--repeated-aug', action='store_true')
+    parser.add_argument('--no-repeated-aug', action='store_false', dest='repeated_aug')
+    parser.set_defaults(repeated_aug=True)
+    parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
+    parser.add_argument('--unscale-lr', action='store_true')
+    args = parser.parse_args()
+
+    # Global Config
+    device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
+    logger.info(f"Device: {device}")
+
+    manager = mp.Manager()
+    train_metrics = manager.dict()
+    test_metrics = manager.dict()
+    for epoch in range(args.epochs):
+        train_metrics[str(epoch)] = manager.dict()
+        test_metrics[str(epoch)] = manager.dict()
+    mp.spawn(
+        main, 
+        args=(args.world_size, args, train_metrics, test_metrics), 
+        nprocs=args.world_size,
+    )
