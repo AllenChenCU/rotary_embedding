@@ -20,5 +20,7 @@ For each of the following tasks,
 Measure accuracy and speed for training and inferencing. 
 
 export LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
-
-python3 rope_vit_ext/main.py --cuda --epochs 1 --run_id vit_small_patch16_224 --dataset cifar10 --distributed
+export RANK=0
+export WORLD_SIZE=4
+export LOCAL_RANK=0
+python3 rope_vit_ext/main.py --cuda --epochs 1 --run_id vit_small_patch16_224 --dataset cifar10 --distributed --world_size 4
