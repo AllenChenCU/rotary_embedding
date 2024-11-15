@@ -73,6 +73,7 @@ def init_distributed_mode(args, rank, world_size):
     #     return
 
     #args.distributed = True
+    args.rank = rank
     args.gpu = rank % torch.cuda.device_count()
     os.environ['MASTER_ADDR'] = 'localhost'
     os.environ['MASTER_PORT'] = '12355'
