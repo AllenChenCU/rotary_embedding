@@ -1,6 +1,7 @@
 from functools import partial
 
 import torch
+import torch.nn as nn
 import torchvision
 from timm.models.vision_transformer import VisionTransformer, _cfg
 from timm.models.registry import register_model
@@ -30,4 +31,4 @@ def vit_small_patch16_224(pretrained=False, **kwargs):
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
-    
+
