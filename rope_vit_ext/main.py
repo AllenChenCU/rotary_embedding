@@ -87,7 +87,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
     # model.heads.head = nn.Linear(num_ftrs, num_classes)
     model = create_model(
         args.model, 
-        pretrained=False,
+        pretrained=args.pretrained,
         num_classes=num_classes,
         drop_rate=0.0, 
         drop_path_rate=0.1, 
@@ -193,6 +193,7 @@ if __name__ == "__main__":
     #parser.set_defaults(repeated_aug=True)
     parser.add_argument('--lr', type=float, default=5e-4, metavar='LR', help='learning rate (default: 5e-4)')
     parser.add_argument('--unscale-lr', action='store_true')
+    parser.add_argument('--pretrained', action='store_true', default=False, help="whether to load pre-trained model weights")
     args = parser.parse_args()
 
     # Global Config

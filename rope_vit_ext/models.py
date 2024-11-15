@@ -8,12 +8,12 @@ from timm.models.registry import register_model
 
 
 __all__ = [
-    "vit_small_patch16_224", 
+    "vit_small_patch16_224_scratch", 
 ]
 
 
 @register_model
-def vit_small_patch16_224(pretrained=False, **kwargs):
+def vit_small_patch16_224_scratch(pretrained=False, **kwargs):
     model = VisionTransformer(
         patch_size=16,
         embed_dim=384, 
