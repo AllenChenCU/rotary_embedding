@@ -1,3 +1,5 @@
+import os
+
 import torch
 from torchvision import models, transforms, datasets
 from torchvision.datasets.folder import ImageFolder, default_loader
