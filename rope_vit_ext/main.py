@@ -188,7 +188,7 @@ if __name__ == "__main__":
             test_metrics[str(epoch)] = manager.dict()
         mp.spawn(
             main, 
-            args=(args.world_size, args, train_metrics, test_metrics), 
+            args=(args.world_size, args, train_metrics, test_metrics, device), 
             nprocs=args.world_size,
         )
     else:
