@@ -21,25 +21,25 @@ def train(
     lr_scheduler=None, 
     num_epochs=5, 
     device="cpu", 
+    rank=0, 
+    train_metrics={}, 
+    test_metrics={}, 
 ):
-    
-    train_metrics = {}
-    test_metrics = {}
     best_acc = 0
 
     for epoch in range(num_epochs):
         if args.distributed:
             trainloader.sampler.set_epoch(epoch)
-        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device)
+        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, device, rank)
         train_metrics[str(epoch)] = train_result
-        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, args.model, best_acc)
+        test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, device, rank, args.model, best_acc)
         test_metrics[str(epoch)] = test_result
         if lr_scheduler:
             lr_scheduler.step()
     return train_metrics, test_metrics
 
 
-def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
+def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device, rank):
     logger.info(f'Training epoch: {epoch} \n')
 
     # Config
@@ -58,7 +58,11 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         
         # train
-        inputs, targets = inputs.to(device), targets.to(device)
+        if args.distributed:
+            dest = rank
+        else:
+            dest = device
+        inputs, targets = inputs.to(dest), targets.to(dest)
         if device == "cuda":
             torch.cuda.synchronize()
         training_start = time.perf_counter()
@@ -107,7 +111,7 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, device):
     return results
 
 
-def test_one_epoch(epoch, dataloader, net, criterion, device, model_name="model", best_acc=0):
+def test_one_epoch(epoch, dataloader, net, criterion, device, rank, model_name="model", best_acc=0):
     logger.info(f"Testing epoch: {epoch}\n")
 
     # Config
@@ -126,7 +130,11 @@ def test_one_epoch(epoch, dataloader, net, criterion, device, model_name="model"
         for batch_idx, (inputs, targets) in enumerate(dataloader):
 
             # Compute
-            inputs, targets = inputs.to(device), targets.to(device)
+            if args.distributed:
+                dest = rank
+            else:
+                dest = device
+            inputs, targets = inputs.to(dest), targets.to(dest)
             if device == "cuda":
                 torch.cuda.synchronize()
             start_time = time.perf_counter()

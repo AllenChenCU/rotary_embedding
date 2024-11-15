@@ -24,7 +24,7 @@ from utils import (
 logger = structlog.get_logger()
 
 
-def main(rank, world_size, args, train_metrics, test_metrics):
+def main(rank, world_size, args, train_metrics, test_metrics, device):
 
     logger.info(f"Distributed Training: {args.distributed}")
     if args.distributed:
@@ -118,7 +118,8 @@ def main(rank, world_size, args, train_metrics, test_metrics):
 
     # train
     train_metrics, test_metrics = train(
-        args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, device,
+        args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, 
+        device, rank, train_metrics, test_metrics,
     )
 
     if args.distributed:
@@ -178,14 +179,17 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     logger.info(f"Device: {device}")
 
-    manager = mp.Manager()
-    train_metrics = manager.dict()
-    test_metrics = manager.dict()
-    for epoch in range(args.epochs):
-        train_metrics[str(epoch)] = manager.dict()
-        test_metrics[str(epoch)] = manager.dict()
-    mp.spawn(
-        main, 
-        args=(args.world_size, args, train_metrics, test_metrics), 
-        nprocs=args.world_size,
-    )
+    if args.distributed:
+        manager = mp.Manager()
+        train_metrics = manager.dict()
+        test_metrics = manager.dict()
+        for epoch in range(args.epochs):
+            train_metrics[str(epoch)] = manager.dict()
+            test_metrics[str(epoch)] = manager.dict()
+        mp.spawn(
+            main, 
+            args=(args.world_size, args, train_metrics, test_metrics), 
+            nprocs=args.world_size,
+        )
+    else:
+        main(0, 1, args, {}, {}, device)
