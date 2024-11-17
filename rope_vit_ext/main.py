@@ -81,10 +81,6 @@ def main(rank, world_size, args, train_metrics, test_metrics):
 
     # Model
     logger.info(f"Model: {args.model}")
-    # model = models.vit_b_16(weights='IMAGENET1K_V1')
-    # model = models.vit_b_16()
-    # num_ftrs = model.heads.head.in_features
-    # model.heads.head = nn.Linear(num_ftrs, num_classes)
     model = create_model(
         args.model, 
         pretrained=args.pretrained,
@@ -92,7 +88,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
         drop_rate=0.0, 
         drop_path_rate=0.1, 
         drop_block_rate=None, 
-        img_size=224, 
+        #img_size=224, 
     )
     model = model.to(args.device)
     model_without_ddp = model
@@ -112,7 +108,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
     if args.optimizer == "sgd":
         optimizer = optim.SGD(model_without_ddp.parameters(), lr=args.lr, momentum=0.9)
     else:
-        optimizer = optim.Adam(model_without_ddp.parameters(), lr=args.lr)
+        optimizer = optim.AdamW(model_without_ddp.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
     
     lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     num_epochs = args.epochs
@@ -181,6 +177,7 @@ if __name__ == "__main__":
     parser.add_argument("--run_id", default="test_run", type=str, help="run id for naming the metrics files")
     parser.add_argument("--model", default="vit_small_patch16_224", type=str, help="model used")
     parser.add_argument("--dataset", default="cifar10", type=str, help="dataset used")
+    parser.add_argument("--input_size", default=32, type=int, help="desired image input size into the model")
     parser.add_argument("--batch_size", default=64, type=int, help="Batch size")
     parser.add_argument("--num_workers", default=2, type=int, help="number of workers for dataloader")
     # distributed training parameters

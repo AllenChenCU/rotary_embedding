@@ -21,7 +21,23 @@ Measure accuracy and speed for training and inferencing.
 
 export LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/nvjitlink/lib:$LD_LIBRARY_PATH
 
+Test on Cloud with 4 GPUs
+
 python3 rope_vit_ext/main.py --cuda --epochs 1 --run_id vit_small_patch16_224 --dataset cifar10 --distributed --world_size 4 --optimizer adam --batch_size 64
 
 
+Test Local
 
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_cifar10 --model vit_cifar10
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_1D_axial_2x2_cifar10 --model vit_rope_1D_axial_2x2_cifar10
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_2x2_cifar10 --model vit_rope_2D_axial_2x2_cifar10 --input_size 32
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_3x3_cifar10 --model vit_rope_2D_axial_3x3_cifar10 --input_size 36
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_4x4_cifar10 --model vit_rope_2D_axial_4x4_cifar10 --input_size 32
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_5x5_cifar10 --model vit_rope_2D_axial_5x5_cifar10 --input_size 40
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_6x6_cifar10 --model vit_rope_2D_axial_6x6_cifar10 --input_size 36

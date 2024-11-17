@@ -7,7 +7,7 @@ from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from timm.data import create_transform
 
 
-def build_transform(is_train, input_size=224):
+def build_transform(is_train, input_size=32):
     resize_im = input_size > 32
     if is_train:
         # this should always dispatch to transforms_imagenet_train
@@ -42,12 +42,13 @@ def build_transform(is_train, input_size=224):
 
 
 def build_dataset(is_train, args):
-    transform = build_transform(is_train)
 
     if args.dataset == 'cifar10':
+        transform = build_transform(is_train, input_size=args.input_size)
         dataset = datasets.CIFAR10(args.data_path, download=True, train=is_train, transform=transform)
         nb_classes = 10
     elif args.dataset == 'imagenet':
+        transform = build_transform(is_train, input_size=224)
         root = os.path.join(args.data_path, 'train' if is_train else 'val')
         dataset = datasets.ImageFolder(root, transform=transform)
         nb_classes = 1000
