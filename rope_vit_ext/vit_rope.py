@@ -9,13 +9,6 @@ def pair(t):
     return t if isinstance(t, tuple) else (t, t)
 
 
-def rotate_every_two(x):
-    x = rearrange(x, '... (d j) -> ... d j', j=2)
-    x1, x2 = x.unbind(dim = -1)
-    x = torch.stack((-x2, x1), dim=-1)
-    return rearrange(x, '... d j -> ... (d j)')
-
-
 class Axial1DRoPE(nn.Module):
     def __init__(self, dim, max_seq_len):
         super().__init__()
@@ -30,8 +23,15 @@ class Axial1DRoPE(nn.Module):
         sin, cos = sinu_pos.unbind(dim = -2)
 
         sin, cos = map(lambda t: repeat(t, 'b n -> b (n j)', j = 2), (sin, cos))
-        q, k = map(lambda t: (t * cos) + (rotate_every_two(t) * sin), (q, k))
+        q, k = map(lambda t: (t * cos) + (self.swap_first_two(t) * sin), (q, k))
         return q, k
+
+    def swap_first_two(self, x):
+        x = rearrange(x, '... (d j) -> ... d j', j=2)
+        x_clone = x.clone()
+        x_clone[..., [0, 1]] = x_clone[..., [1, 0]]
+        x_clone[..., 0] = -x_clone[..., 0]
+        return rearrange(x_clone, '... d j -> ... (d j)')
 
     def forward(self, x):
         return self.emb[None, :x.shape[1], :].to(x)
@@ -83,15 +83,22 @@ class Axial2DRoPE(nn.Module):
         _kx, _ky = _k.unbind(dim=-2)
 
         qx, kx = map(
-            lambda t: (t * cos_x) + (rotate_every_two(t) * sin_x) + (t * dummy), (_qx, _kx)
+            lambda t: (t * cos_x) + (self.swap_first_two(t) * sin_x) + (t * dummy), (_qx, _kx)
         )
         qy, ky = map(
-            lambda t: (t * cos_y) + (rotate_every_two(t) * sin_y) + (t * dummy), (_qy, _ky)
+            lambda t: (t * cos_y) + (self.swap_first_two(t) * sin_y) + (t * dummy), (_qy, _ky)
         )
 
         q = torch.cat((qx, qy), dim=-1)
         k = torch.cat((kx, ky), dim=-1)
         return q, k
+
+    def swap_first_two(self, x):
+        x = rearrange(x, '... (d j) -> ... d j', j=self.N)
+        x_clone = x.clone()
+        x_clone[..., [0, 1]] = x_clone[..., [1, 0]]
+        x_clone[..., 0] = -x_clone[..., 0]
+        return rearrange(x_clone, '... d j -> ... (d j)')
 
     def forward(self, x):
         return self.emb[None, :x.shape[1], :].to(x)
