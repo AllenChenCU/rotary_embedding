@@ -164,7 +164,7 @@ def test_one_epoch(epoch, dataloader, net, criterion, args, best_acc=0):
     # Save checkpoint.
     acc = top1.avg
     if acc > best_acc:
-        logger.info(f'Saving model for epoch {epoch} with best acc at {best_acc}...')
+        logger.info(f'Saving model for epoch {epoch} with best acc at {acc}...')
         state = {
             'net': net.state_dict(),
             'acc': acc,
