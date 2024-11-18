@@ -7,3 +7,4 @@ proto-plus==1.24.0.dev1
 torch
 torchvision
 timm==0.4.12
+einops
