@@ -19,7 +19,6 @@ def train(
     criterion, 
     optimizer, 
     lr_scheduler=None, 
-    scaler=None,
     num_epochs=5, 
     train_metrics={}, 
     test_metrics={}, 
@@ -29,7 +28,7 @@ def train(
     for epoch in range(num_epochs):
         if args.distributed:
             trainloader.sampler.set_epoch(epoch)
-        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, args, scaler)
+        train_result = train_one_epoch(epoch, trainloader, net, criterion, optimizer, args)
         test_result, best_acc = test_one_epoch(epoch, testloader, net, criterion, args, best_acc)
         if args.distributed:
             train_metrics[str(epoch)][str(args.rank)] = train_result
@@ -42,7 +41,7 @@ def train(
     return train_metrics, test_metrics
 
 
-def train_one_epoch(epoch, dataloader, net, criterion, optimizer, args, scaler=None):
+def train_one_epoch(epoch, dataloader, net, criterion, optimizer, args):
     logger.info(f'Training epoch: {epoch} \n')
 
     # Config
@@ -71,17 +70,9 @@ def train_one_epoch(epoch, dataloader, net, criterion, optimizer, args, scaler=N
         training_start = time.perf_counter()
         optimizer.zero_grad()
         outputs = net(inputs)
-        if scaler is not None:
-            with torch.cuda.amp.autocast():
-                loss = criterion(outputs, targets)
-            scaler.scale(loss).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            loss = criterion(outputs, targets)
-            loss.backward()
-            optimizer.step()
-        
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
         if args.device == "cuda":
             torch.cuda.synchronize()
         curr_time_training = time.perf_counter()
