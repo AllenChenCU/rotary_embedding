@@ -112,7 +112,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
     
     lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
     num_epochs = args.epochs
-    if device == "cuda":
+    if args.device == "cuda":
         scaler = torch.cuda.amp.GradScaler()
     else:
         scaler = None
