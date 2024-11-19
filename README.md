@@ -40,7 +40,7 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_a
 
 ## Test Local
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_cifar10 --model vit_cifar10
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_cifar10 --model vit_cifar10 --batch_size 64 --lr 0.001
 
 python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_1D_axial_2x2_cifar10 --model vit_rope_1D_axial_2x2_cifar10
 
