@@ -104,11 +104,19 @@ class Axial2DRoPE(nn.Module):
         return self.emb[None, :x.shape[1], :].to(x)
 
 
+class PreNorm(nn.Module):
+    def __init__(self, dim, fn):
+        super().__init__()
+        self.norm = nn.LayerNorm(dim)
+        self.fn = fn
+    def forward(self, x, **kwargs):
+        return self.fn(self.norm(x), **kwargs)
+
+
 class FeedForward(nn.Module):
     def __init__(self, dim, hidden_dim, dropout = 0.):
         super().__init__()
         self.net = nn.Sequential(
-            nn.LayerNorm(dim),
             nn.Linear(dim, hidden_dim),
             nn.GELU(),
             nn.Dropout(dropout),
@@ -128,8 +136,6 @@ class Attention(nn.Module):
         self.heads = heads
         self.scale = dim_head ** -0.5
 
-        self.norm = nn.LayerNorm(dim)
-
         self.attend = nn.Softmax(dim = -1)
         self.to_qkv = nn.Linear(dim, inner_dim * 3, bias = False)
 
@@ -139,7 +145,6 @@ class Attention(nn.Module):
         ) if project_out else nn.Identity()
 
     def forward(self, x, pos_emb=None, apply_pos_emb_fn=None):
-        x = self.norm(x)
         b, n, _, h = *x.shape, self.heads
         qkv = self.to_qkv(x).chunk(3, dim = -1)
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> b h n d', h = h), qkv)
@@ -162,14 +167,14 @@ class Transformer(nn.Module):
         self.layers = nn.ModuleList([])
         for _ in range(depth):
             self.layers.append(nn.ModuleList([
-                Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout),
-                FeedForward(dim, mlp_dim, dropout = dropout)
+                PreNorm(dim, Attention(dim, heads = heads, dim_head = dim_head, dropout = dropout)),
+                PreNorm(dim, FeedForward(dim, mlp_dim, dropout = dropout))
             ]))
     def forward(self, x, pos_emb, apply_pos_emb_fn=None):
         for attn, ff in self.layers:
             x = attn(x, pos_emb=pos_emb, apply_pos_emb_fn=apply_pos_emb_fn) + x
             x = ff(x) + x
-        return self.norm(x)
+        return x
 
 
 class ViTRoPE(nn.Module):
@@ -203,9 +208,7 @@ class ViTRoPE(nn.Module):
 
         self.to_patch_embedding = nn.Sequential(
             Rearrange('b c (h p1) (w p2) -> b (h w) (p1 p2 c)', p1 = patch_height, p2 = patch_width),
-            nn.LayerNorm(patch_dim),
             nn.Linear(patch_dim, dim),
-            nn.LayerNorm(dim),
         )
 
         #self.pos_embedding = nn.Parameter(torch.randn(1, num_patches + 1, dim))
