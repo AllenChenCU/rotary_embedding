@@ -87,8 +87,8 @@ def main(rank, world_size, args, train_metrics, test_metrics):
         args.model, 
         pretrained=args.pretrained,
         num_classes=num_classes,
-        drop_rate=0.0, 
-        drop_path_rate=0.1, 
+        drop_rate=0.25, 
+        drop_path_rate=0.0, 
         drop_block_rate=None, 
         #img_size=224, 
     )
@@ -100,9 +100,9 @@ def main(rank, world_size, args, train_metrics, test_metrics):
         model_without_ddp = model.module
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     logger.info(f"number of params: {n_parameters}")
-    if not args.unscale_lr:
-        linear_scaled_lr = args.lr * args.batch_size * get_world_size() / 512.0
-        args.lr = linear_scaled_lr
+    # if not args.unscale_lr:
+    #     linear_scaled_lr = args.lr * args.batch_size * get_world_size() / 512.0
+    #     args.lr = linear_scaled_lr
 
     # Train Config
     logger.info(f"Training...")
