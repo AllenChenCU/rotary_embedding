@@ -110,7 +110,8 @@ def main(rank, world_size, args, train_metrics, test_metrics):
     else:
         optimizer = optim.AdamW(model_without_ddp.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
     
-    lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    #lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+    lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     num_epochs = args.epochs
 
     # train
