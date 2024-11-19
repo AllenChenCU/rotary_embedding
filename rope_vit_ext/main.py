@@ -6,6 +6,7 @@ import torchvision
 import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
+import torch.backends.cudnn as cudnn
 #from torchvision import models
 import pandas as pd
 import structlog
@@ -32,6 +33,7 @@ def main(rank, world_size, args, train_metrics, test_metrics):
         init_distributed_mode(args, rank, world_size)
         logger.info(f"World size: {get_world_size()}")
         logger.info(f"Rank: {get_rank()}")
+        cudnn.benchmark = True
 
     # Data
     logger.info(f"Dataset: {args.dataset}")
@@ -110,13 +112,17 @@ def main(rank, world_size, args, train_metrics, test_metrics):
     else:
         optimizer = optim.AdamW(model_without_ddp.parameters(), lr=args.lr, betas=(0.9, 0.999), eps=1e-08, weight_decay=0.01, amsgrad=False)
     
-    #lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-    lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
+    lr_scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
+    #lr_scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=10, gamma=0.5)
     num_epochs = args.epochs
+    if args.device == "cuda":
+        scaler = torch.cuda.amp.GradScaler()
+    else:
+        scaler = None
 
     # train
     train_metrics, test_metrics = train(
-        args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, num_epochs, 
+        args, trainloader, testloader, model, criterion, optimizer, lr_scheduler, scaler, num_epochs, 
         train_metrics, test_metrics,
     )
 
