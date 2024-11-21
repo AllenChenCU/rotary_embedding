@@ -112,6 +112,13 @@ class WeightedAxial2DRoPE(Axial2DRoPE):
         indices = list(range(N))
         index_pairs = list(combinations(indices, 2))
         return index_pairs
+    
+    def swap_the_two(self, x, m, n):
+        x = rearrange(x, '... (d j) -> ... d j', j=self.N)
+        x_clone = x.clone()
+        x_clone[..., [m, n]] = x_clone[..., [n, m]]
+        x_clone[..., m] = -x_clone[..., m]
+        return rearrange(x_clone, '... d j -> ... (d j)')
 
     def apply_rotary_pos_emb(self, q, k, sinu_pos):
         sinu_pos = rearrange(sinu_pos, '() n (j d) -> n j d', j=4)
@@ -142,10 +149,10 @@ class WeightedAxial2DRoPE(Axial2DRoPE):
             _kx, _ky = _k.unbind(dim=-2)
 
             qx, kx = map(
-                lambda t: (t * cos_x) + (self.swap_first_two(t) * sin_x) + (t * dummy), (_qx, _kx)
+                lambda t: (t * cos_x) + (self.swap_the_two(t, m, n) * sin_x) + (t * dummy), (_qx, _kx)
             )
             qy, ky = map(
-                lambda t: (t * cos_y) + (self.swap_first_two(t) * sin_y) + (t * dummy), (_qy, _ky)
+                lambda t: (t * cos_y) + (self.swap_the_two(t, m, n) * sin_y) + (t * dummy), (_qy, _ky)
             )
 
             q = torch.cat((qx, qy), dim=-1)
