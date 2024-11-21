@@ -23,7 +23,7 @@ export LD_LIBRARY_PATH=/opt/conda/lib/python3.10/site-packages/nvidia/nvjitlink/
 
 ## Test on Cloud with 4 GPUs
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_cifar10 --model vit_cifar10 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_no_rope_cifar10 --model vit_no_rope_cifar10 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
 python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_1D_axial_2x2_cifar10 --model vit_rope_1D_axial_2x2_cifar10 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
@@ -48,7 +48,7 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_weighted
 
 ## Test Local
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_cifar10 --model vit_cifar10 --batch_size 64 --lr 0.001
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_no_rope_cifar10 --model vit_no_rope_cifar10 --batch_size 64 --lr 0.001
 
 python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_1D_axial_2x2_cifar10 --model vit_rope_1D_axial_2x2_cifar10
 

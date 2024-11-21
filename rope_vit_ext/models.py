@@ -11,7 +11,7 @@ from vit_rope import ViTRoPE
 
 
 __all__ = [
-    "vit_cifar10", 
+    "vit_no_rope_cifar10", 
     "vit_rope_1D_axial_2x2_cifar10", 
     "vit_rope_2D_axial_2x2_cifar10", 
     "vit_rope_2D_axial_3x3_cifar10", 
@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 @register_model
-def vit_cifar10(pretrained=False, **kwargs):
+def vit_no_rope_cifar10(pretrained=False, **kwargs):
     model = ViT(
         image_size=32, 
         patch_size=1, 
@@ -37,7 +37,7 @@ def vit_cifar10(pretrained=False, **kwargs):
     )
     if pretrained:
         curr_dir = os.path.dirname(__file__)
-        checkpoint = os.path.join(curr_dir, "model_registry/vit_cifar10.pth")
+        checkpoint = os.path.join(curr_dir, "model_registry/vit_no_rope_cifar10.pth")
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
