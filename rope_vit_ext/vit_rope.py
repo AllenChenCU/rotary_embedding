@@ -130,29 +130,34 @@ class WeightedAxial2DRoPE(Axial2DRoPE):
         )
         dummy = torch.zeros_like(sin_x)
 
+        _q = rearrange(q, '... n (j d) -> ... n j d', j=2)
+        _qx, _qy = _q.unbind(dim=-2)
+        _k = rearrange(k, '... n (j d) -> ... n j d', j=2)
+        _kx, _ky = _k.unbind(dim=-2)
+
         weighted_q = torch.zeros_like(q)
         weighted_k = torch.zeros_like(k)
         pairs = WeightedAxial2DRoPE.generate_index_pairs(self.N)
         for m, n in pairs:
             # mask every Nth column
+            _sin_x = sin_x.clone()
+            _cos_x = cos_x.clone()
+            _sin_y = sin_y.clone()
+            _cos_y = cos_y.clone()
+            _dummy = dummy.clone()
             for i in range(self.N):
                 if i != m and i != n:
-                    sin_x[..., i::self.N] = 0.0
-                    cos_x[..., i::self.N] = 0.0
-                    sin_y[..., i::self.N] = 0.0
-                    cos_y[..., i::self.N] = 0.0
-                    dummy[..., i::self.N] = 1.0
-
-            _q = rearrange(q, '... n (j d) -> ... n j d', j=2)
-            _qx, _qy = _q.unbind(dim=-2)
-            _k = rearrange(k, '... n (j d) -> ... n j d', j=2)
-            _kx, _ky = _k.unbind(dim=-2)
+                    _sin_x[..., i::self.N] = 0.0
+                    _cos_x[..., i::self.N] = 0.0
+                    _sin_y[..., i::self.N] = 0.0
+                    _cos_y[..., i::self.N] = 0.0
+                    _dummy[..., i::self.N] = 1.0
 
             qx, kx = map(
-                lambda t: (t * cos_x) + (self.swap_the_two(t, m, n) * sin_x) + (t * dummy), (_qx, _kx)
+                lambda t: (t * _cos_x) + (self.swap_the_two(t, m, n) * _sin_x) + (t * _dummy), (_qx, _kx)
             )
             qy, ky = map(
-                lambda t: (t * cos_y) + (self.swap_the_two(t, m, n) * sin_y) + (t * dummy), (_qy, _ky)
+                lambda t: (t * _cos_y) + (self.swap_the_two(t, m, n) * _sin_y) + (t * _dummy), (_qy, _ky)
             )
 
             q = torch.cat((qx, qy), dim=-1)
