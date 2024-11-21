@@ -61,7 +61,14 @@ class Axial2DRoPE(nn.Module):
         t_y = torch.div(t, end_x, rounding_mode='floor').float()
         return t_x, t_y
 
-    def apply_rotary_pos_emb(self, q, k, sinu_pos):
+    def swap_the_two(self, x, m=0, n=1):
+        x = rearrange(x, '... (d j) -> ... d j', j=self.N)
+        x_clone = x.clone()
+        x_clone[..., [m, n]] = x_clone[..., [n, m]]
+        x_clone[..., m] = -x_clone[..., m]
+        return rearrange(x_clone, '... d j -> ... (d j)')
+
+    def apply_rotary_pos_emb(self, q, k, sinu_pos, m=0, n=1):
         sinu_pos = rearrange(sinu_pos, '() n (j d) -> n j d', j=4)
         sin_x, cos_x, sin_y, cos_y = sinu_pos.unbind(dim=-2)
 
@@ -72,12 +79,20 @@ class Axial2DRoPE(nn.Module):
         dummy = torch.zeros_like(sin_x)
 
         # mask every Nth column
-        for i in range(3, self.N+1):
-            sin_x[..., i-1::self.N] = 0.0
-            cos_x[..., i-1::self.N] = 0.0
-            sin_y[..., i-1::self.N] = 0.0
-            cos_y[..., i-1::self.N] = 0.0
-            dummy[..., i-1::self.N] = 1.0
+        for i in range(self.N):
+            if i != m and i != n:
+                sin_x[..., i::self.N] = 0.0
+                cos_x[..., i::self.N] = 0.0
+                sin_y[..., i::self.N] = 0.0
+                cos_y[..., i::self.N] = 0.0
+                dummy[..., i::self.N] = 1.0
+
+        # for i in range(3, self.N+1):
+        #     sin_x[..., i-1::self.N] = 0.0
+        #     cos_x[..., i-1::self.N] = 0.0
+        #     sin_y[..., i-1::self.N] = 0.0
+        #     cos_y[..., i-1::self.N] = 0.0
+        #     dummy[..., i-1::self.N] = 1.0
 
         _q = rearrange(q, '... n (j d) -> ... n j d', j=2)
         _qx, _qy = _q.unbind(dim=-2)
@@ -85,22 +100,22 @@ class Axial2DRoPE(nn.Module):
         _kx, _ky = _k.unbind(dim=-2)
 
         qx, kx = map(
-            lambda t: (t * cos_x) + (self.swap_first_two(t) * sin_x) + (t * dummy), (_qx, _kx)
+            lambda t: (t * cos_x) + (self.swap_the_two(t) * sin_x) + (t * dummy), (_qx, _kx)
         )
         qy, ky = map(
-            lambda t: (t * cos_y) + (self.swap_first_two(t) * sin_y) + (t * dummy), (_qy, _ky)
+            lambda t: (t * cos_y) + (self.swap_the_two(t) * sin_y) + (t * dummy), (_qy, _ky)
         )
 
         q = torch.cat((qx, qy), dim=-1)
         k = torch.cat((kx, ky), dim=-1)
         return q, k
 
-    def swap_first_two(self, x):
-        x = rearrange(x, '... (d j) -> ... d j', j=self.N)
-        x_clone = x.clone()
-        x_clone[..., [0, 1]] = x_clone[..., [1, 0]]
-        x_clone[..., 0] = -x_clone[..., 0]
-        return rearrange(x_clone, '... d j -> ... (d j)')
+    # def swap_first_two(self, x):
+    #     x = rearrange(x, '... (d j) -> ... d j', j=self.N)
+    #     x_clone = x.clone()
+    #     x_clone[..., [0, 1]] = x_clone[..., [1, 0]]
+    #     x_clone[..., 0] = -x_clone[..., 0]
+    #     return rearrange(x_clone, '... d j -> ... (d j)')
 
     def forward(self, x):
         return self.emb[None, :x.shape[1], :].to(x)
