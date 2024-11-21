@@ -157,8 +157,8 @@ class WeightedAxial2DRoPE(Axial2DRoPE):
 
             q = torch.cat((qx, qy), dim=-1)
             k = torch.cat((kx, ky), dim=-1)
-            weighted_q += q
-            weighted_k += k
+            weighted_q = weighted_q + q
+            weighted_k = weighted_k + k
         weighted_q /= len(pairs)
         weighted_k /= len(pairs)
         return weighted_q, weighted_k
