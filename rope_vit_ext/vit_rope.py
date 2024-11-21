@@ -132,7 +132,7 @@ class WeightedAxial2DRoPE(Axial2DRoPE):
 
         weighted_q = torch.zeros_like(q)
         weighted_k = torch.zeros_like(k)
-        pairs = generate_index_pairs(self.N)
+        pairs = WeightedAxial2DRoPE.generate_index_pairs(self.N)
         for m, n in pairs:
             # mask every Nth column
             for i in range(self.N):
