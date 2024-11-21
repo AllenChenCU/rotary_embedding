@@ -1,3 +1,5 @@
+from itertools import combinations
+
 import torch
 from torch import nn, einsum
 
@@ -102,6 +104,57 @@ class Axial2DRoPE(nn.Module):
 
     def forward(self, x):
         return self.emb[None, :x.shape[1], :].to(x)
+
+
+class WeightedAxial2DRoPE(Axial2DRoPE):
+    @staticmethod
+    def generate_index_pairs(N):
+        indices = list(range(N))
+        index_pairs = list(combinations(indices, 2))
+        return index_pairs
+
+    def apply_rotary_pos_emb(self, q, k, sinu_pos):
+        sinu_pos = rearrange(sinu_pos, '() n (j d) -> n j d', j=4)
+        sin_x, cos_x, sin_y, cos_y = sinu_pos.unbind(dim=-2)
+
+        sin_x, cos_x, sin_y, cos_y = map(
+            lambda t: repeat(t, 'b n -> b (n j)', j=self.N), 
+            (sin_x, cos_x, sin_y, cos_y)
+        )
+        dummy = torch.zeros_like(sin_x)
+
+        weighted_q = torch.zeros_like(q)
+        weighted_k = torch.zeros_like(k)
+        pairs = generate_index_pairs(self.N)
+        for m, n in pairs:
+            # mask every Nth column
+            for i in range(self.N):
+                if i != m and i != n:
+                    sin_x[..., i::self.N] = 0.0
+                    cos_x[..., i::self.N] = 0.0
+                    sin_y[..., i::self.N] = 0.0
+                    cos_y[..., i::self.N] = 0.0
+                    dummy[..., i::self.N] = 1.0
+
+            _q = rearrange(q, '... n (j d) -> ... n j d', j=2)
+            _qx, _qy = _q.unbind(dim=-2)
+            _k = rearrange(k, '... n (j d) -> ... n j d', j=2)
+            _kx, _ky = _k.unbind(dim=-2)
+
+            qx, kx = map(
+                lambda t: (t * cos_x) + (self.swap_first_two(t) * sin_x) + (t * dummy), (_qx, _kx)
+            )
+            qy, ky = map(
+                lambda t: (t * cos_y) + (self.swap_first_two(t) * sin_y) + (t * dummy), (_qy, _ky)
+            )
+
+            q = torch.cat((qx, qy), dim=-1)
+            k = torch.cat((kx, ky), dim=-1)
+            weighted_q += q
+            weighted_k += k
+        weighted_q /= len(pairs)
+        weighted_k /= len(pairs)
+        return weighted_q, weighted_k
 
 
 class PreNorm(nn.Module):
@@ -227,9 +280,14 @@ class ViTRoPE(nn.Module):
         if rotary_position_emb == "1D_axial":
             self.layer_pos_emb = Axial1DRoPE(dim_head, max_seq_len)
         elif rotary_position_emb == "2D_axial":
-            self.layer_pos_emb = Axial2DRoPE(
-                dim_head, max_seq_len, image_size=image_size, patch_size=patch_size, N=rotation_matrix_dim, 
-            )
+            if self.weighted_rope:
+                self.layer_pos_emb = WeightedAxial2DRoPE(
+                    dim_head, max_seq_len, image_size=image_size, patch_size=patch_size, N=rotation_matrix_dim, 
+                )
+            else:
+                self.layer_pos_emb = Axial2DRoPE(
+                    dim_head, max_seq_len, image_size=image_size, patch_size=patch_size, N=rotation_matrix_dim, 
+                )
 
     def forward(self, img):
         x = self.to_patch_embedding(img)

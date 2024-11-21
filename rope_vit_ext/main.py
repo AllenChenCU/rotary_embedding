@@ -198,6 +198,7 @@ if __name__ == "__main__":
     parser.add_argument('--lr', type=float, default=1e-3, metavar='LR', help='learning rate (default: 5e-4)')
     parser.add_argument('--unscale-lr', action='store_true')
     parser.add_argument('--pretrained', action='store_true', default=False, help="whether to load pre-trained model weights")
+    parser.add_argument('--weighted_rope', action='store_true', default=False, help="whether to use weighted RoPE on different rotational axis")
     args = parser.parse_args()
 
     # Global Config
