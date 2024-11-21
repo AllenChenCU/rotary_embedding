@@ -254,6 +254,7 @@ class ViTRoPE(nn.Module):
             emb_dropout = 0., 
             rotary_position_emb = "1D_axial", 
             rotation_matrix_dim = 2, 
+            weighted_rope = False,
         ):
         super().__init__()
         image_height, image_width = pair(image_size)
@@ -287,7 +288,7 @@ class ViTRoPE(nn.Module):
         if rotary_position_emb == "1D_axial":
             self.layer_pos_emb = Axial1DRoPE(dim_head, max_seq_len)
         elif rotary_position_emb == "2D_axial":
-            if args.weighted_rope:
+            if weighted_rope:
                 self.layer_pos_emb = WeightedAxial2DRoPE(
                     dim_head, max_seq_len, image_size=image_size, patch_size=patch_size, N=rotation_matrix_dim, 
                 )

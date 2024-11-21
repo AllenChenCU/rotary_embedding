@@ -39,7 +39,7 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_
 
 
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_weighted_rope_2D_axial_3x3_cifar10 --model vit_rope_2D_axial_3x3_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001 --weighted_rope
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_weighted_rope_2D_axial_3x3_cifar10 --model vit_weighted_rope_2D_axial_3x3_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001 
 
 
 
