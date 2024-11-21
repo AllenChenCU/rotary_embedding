@@ -45,6 +45,11 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_weighted
 
 
 
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_3x3_1_cifar10 --model vit_rope_2D_axial_3x3_1_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_3x3_2_cifar10 --model vit_rope_2D_axial_3x3_2_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+
+
 
 ## Test Local
 

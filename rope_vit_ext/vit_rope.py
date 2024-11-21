@@ -1,4 +1,5 @@
 from itertools import combinations
+from functools import partial
 
 import torch
 from torch import nn, einsum
@@ -100,10 +101,10 @@ class Axial2DRoPE(nn.Module):
         _kx, _ky = _k.unbind(dim=-2)
 
         qx, kx = map(
-            lambda t: (t * cos_x) + (self.swap_the_two(t) * sin_x) + (t * dummy), (_qx, _kx)
+            lambda t: (t * cos_x) + (self.swap_the_two(t, m=m, n=n) * sin_x) + (t * dummy), (_qx, _kx)
         )
         qy, ky = map(
-            lambda t: (t * cos_y) + (self.swap_the_two(t) * sin_y) + (t * dummy), (_qy, _ky)
+            lambda t: (t * cos_y) + (self.swap_the_two(t, m=m, n=n) * sin_y) + (t * dummy), (_qy, _ky)
         )
 
         q = torch.cat((qx, qy), dim=-1)
@@ -275,6 +276,8 @@ class ViTRoPE(nn.Module):
             rotary_position_emb = "1D_axial", 
             rotation_matrix_dim = 2, 
             weighted_rope = False,
+            m=0, # first index for the rotation matrix that contains sin/cos term
+            n=1, # second index
         ):
         super().__init__()
         image_height, image_width = pair(image_size)
@@ -331,7 +334,7 @@ class ViTRoPE(nn.Module):
         x = self.transformer(
             x, 
             pos_emb=layer_pos_emb, 
-            apply_pos_emb_fn=self.layer_pos_emb.apply_rotary_pos_emb, 
+            apply_pos_emb_fn=partial(self.layer_pos_emb.apply_rotary_pos_emb, m=m, n=n), 
         )
 
         x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
