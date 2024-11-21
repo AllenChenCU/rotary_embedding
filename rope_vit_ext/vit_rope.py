@@ -280,6 +280,8 @@ class ViTRoPE(nn.Module):
             n=1, # second index
         ):
         super().__init__()
+        self.m = m
+        self.n = n
         image_height, image_width = pair(image_size)
         patch_height, patch_width = pair(patch_size)
 
@@ -334,7 +336,7 @@ class ViTRoPE(nn.Module):
         x = self.transformer(
             x, 
             pos_emb=layer_pos_emb, 
-            apply_pos_emb_fn=partial(self.layer_pos_emb.apply_rotary_pos_emb, m=m, n=n), 
+            apply_pos_emb_fn=partial(self.layer_pos_emb.apply_rotary_pos_emb, m=self.m, n=self.n), 
         )
 
         x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]

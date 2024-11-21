@@ -21,7 +21,7 @@ __all__ = [
     "vit_weighted_rope_2D_axial_3x3_cifar10", 
     "vit_weighted_rope_2D_axial_4x4_cifar10", 
     "vit_rope_2D_axial_3x3_1_cifar10", 
-
+    "vit_rope_2D_axial_3x3_2_cifar10", 
 ]
 
 @register_model
