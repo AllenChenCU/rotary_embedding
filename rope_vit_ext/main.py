@@ -204,6 +204,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() and args.cuda else "cpu")
     logger.info(f"Device: {device}")
     args.device = device
+    torch.autograd.set_detect_anomaly(True) 
 
     if args.distributed:
         manager = mp.Manager()
