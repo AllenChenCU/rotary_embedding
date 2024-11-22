@@ -41,10 +41,12 @@ class Axial1DRoPE(nn.Module):
 
 
 class Axial2DRoPE(nn.Module):
-    def __init__(self, dim, max_seq_len, image_size, patch_size, N=2):
+    def __init__(self, dim, max_seq_len, image_size, patch_size, N=2, m=0, n=1):
         super().__init__()
         theta = 100.0
         self.N = N
+        self.m = m
+        self.n = n
         factor = 2 * N # 2D axial x N-D subspace
         freqs_x = 1.0 / (theta ** (torch.arange(0, dim, factor)[: (dim // factor)].float() / dim))
         freqs_y = 1.0 / (theta ** (torch.arange(0, dim, factor)[: (dim // factor)].float() / dim))
@@ -62,14 +64,14 @@ class Axial2DRoPE(nn.Module):
         t_y = torch.div(t, end_x, rounding_mode='floor').float()
         return t_x, t_y
 
-    def swap_the_two(self, x, m=0, n=1):
+    def swap_the_two(self, x):
         x = rearrange(x, '... (d j) -> ... d j', j=self.N)
         x_clone = x.clone()
-        x_clone[..., [m, n]] = x_clone[..., [n, m]]
-        x_clone[..., m] = -x_clone[..., m]
+        x_clone[..., [self.m, self.n]] = x_clone[..., [self.n, self.m]]
+        x_clone[..., self.m] = -x_clone[..., self.m]
         return rearrange(x_clone, '... d j -> ... (d j)')
 
-    def apply_rotary_pos_emb(self, q, k, sinu_pos, m=0, n=1):
+    def apply_rotary_pos_emb(self, q, k, sinu_pos):
         sinu_pos = rearrange(sinu_pos, '() n (j d) -> n j d', j=4)
         sin_x, cos_x, sin_y, cos_y = sinu_pos.unbind(dim=-2)
 
@@ -81,7 +83,7 @@ class Axial2DRoPE(nn.Module):
 
         # mask every Nth column
         for i in range(self.N):
-            if i != m and i != n:
+            if i != self.m and i != self.n:
                 sin_x[..., i::self.N] = 0.0
                 cos_x[..., i::self.N] = 0.0
                 sin_y[..., i::self.N] = 0.0
@@ -101,22 +103,15 @@ class Axial2DRoPE(nn.Module):
         _kx, _ky = _k.unbind(dim=-2)
 
         qx, kx = map(
-            lambda t: (t * cos_x) + (self.swap_the_two(t, m=m, n=n) * sin_x) + (t * dummy), (_qx, _kx)
+            lambda t: (t * cos_x) + (self.swap_the_two(t) * sin_x) + (t * dummy), (_qx, _kx)
         )
         qy, ky = map(
-            lambda t: (t * cos_y) + (self.swap_the_two(t, m=m, n=n) * sin_y) + (t * dummy), (_qy, _ky)
+            lambda t: (t * cos_y) + (self.swap_the_two(t) * sin_y) + (t * dummy), (_qy, _ky)
         )
 
         q = torch.cat((qx, qy), dim=-1)
         k = torch.cat((kx, ky), dim=-1)
         return q, k
-
-    # def swap_first_two(self, x):
-    #     x = rearrange(x, '... (d j) -> ... d j', j=self.N)
-    #     x_clone = x.clone()
-    #     x_clone[..., [0, 1]] = x_clone[..., [1, 0]]
-    #     x_clone[..., 0] = -x_clone[..., 0]
-    #     return rearrange(x_clone, '... d j -> ... (d j)')
 
     def forward(self, x):
         return self.emb[None, :x.shape[1], :].to(x)
@@ -280,8 +275,6 @@ class ViTRoPE(nn.Module):
             n=1, # second index
         ):
         super().__init__()
-        self.m = m
-        self.n = n
         image_height, image_width = pair(image_size)
         patch_height, patch_width = pair(patch_size)
 
@@ -320,6 +313,7 @@ class ViTRoPE(nn.Module):
             else:
                 self.layer_pos_emb = Axial2DRoPE(
                     dim_head, max_seq_len, image_size=image_size, patch_size=patch_size, N=rotation_matrix_dim, 
+                    m=m, n=n,
                 )
 
     def forward(self, img):
@@ -336,7 +330,7 @@ class ViTRoPE(nn.Module):
         x = self.transformer(
             x, 
             pos_emb=layer_pos_emb, 
-            apply_pos_emb_fn=partial(self.layer_pos_emb.apply_rotary_pos_emb, m=self.m, n=self.n), 
+            apply_pos_emb_fn=self.layer_pos_emb.apply_rotary_pos_emb, 
         )
 
         x = x.mean(dim = 1) if self.pool == 'mean' else x[:, 0]
