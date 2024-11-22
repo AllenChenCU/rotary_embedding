@@ -31,11 +31,11 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_
 
 python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_3x3_0_cifar10 --model vit_rope_2D_axial_3x3_0_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_4x4_cifar10 --model vit_rope_2D_axial_4x4_cifar10 --input_size 32 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_4x4_0_cifar10 --model vit_rope_2D_axial_4x4_0_cifar10 --input_size 32 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_5x5_cifar10 --model vit_rope_2D_axial_5x5_cifar10 --input_size 40 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_5x5_0_cifar10 --model vit_rope_2D_axial_5x5_0_cifar10 --input_size 40 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_6x6_cifar10 --model vit_rope_2D_axial_6x6_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 25 --run_id vit_rope_2D_axial_6x6_0_cifar10 --model vit_rope_2D_axial_6x6_0_cifar10 --input_size 36 --cuda --distributed --world_size 4 --batch_size 64 --lr 0.001
 
 
 
@@ -59,10 +59,10 @@ python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_1D_a
 
 python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_2x2_cifar10 --model vit_rope_2D_axial_2x2_cifar10 --input_size 32
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_3x3_cifar10 --model vit_rope_2D_axial_3x3_cifar10 --input_size 36
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_3x3_0_cifar10 --model vit_rope_2D_axial_3x3_0_cifar10 --input_size 36
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_4x4_cifar10 --model vit_rope_2D_axial_4x4_cifar10 --input_size 32
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_4x4_0_cifar10 --model vit_rope_2D_axial_4x4_0_cifar10 --input_size 32
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_5x5_cifar10 --model vit_rope_2D_axial_5x5_cifar10 --input_size 40
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_5x5_0_cifar10 --model vit_rope_2D_axial_5x5_0_cifar10 --input_size 40
 
-python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_6x6_cifar10 --model vit_rope_2D_axial_6x6_cifar10 --input_size 36
+python3 rope_vit_ext/main.py --optimizer adamw --epochs 5 --run_id vit_rope_2D_axial_6x6_0_cifar10 --model vit_rope_2D_axial_6x6_0_cifar10 --input_size 36

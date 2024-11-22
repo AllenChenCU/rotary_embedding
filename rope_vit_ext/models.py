@@ -15,9 +15,9 @@ __all__ = [
     "vit_rope_1D_axial_2x2_cifar10", 
     "vit_rope_2D_axial_2x2_cifar10", 
     "vit_rope_2D_axial_3x3_0_cifar10", 
-    "vit_rope_2D_axial_4x4_cifar10", 
-    "vit_rope_2D_axial_5x5_cifar10", 
-    "vit_rope_2D_axial_6x6_cifar10", 
+    "vit_rope_2D_axial_4x4_0_cifar10", 
+    "vit_rope_2D_axial_5x5_0_cifar10", 
+    "vit_rope_2D_axial_6x6_0_cifar10", 
     "vit_weighted_rope_2D_axial_3x3_cifar10", 
     "vit_weighted_rope_2D_axial_4x4_cifar10", 
     "vit_rope_2D_axial_3x3_1_cifar10", 
@@ -165,7 +165,7 @@ def vit_rope_2D_axial_3x3_2_cifar10(pretrained=False, **kwargs):
 
 
 @register_model
-def vit_rope_2D_axial_4x4_cifar10(pretrained=False, **kwargs):
+def vit_rope_2D_axial_4x4_0_cifar10(pretrained=False, **kwargs):
     model = ViTRoPE(
         image_size=32, 
         patch_size=1, 
@@ -181,14 +181,14 @@ def vit_rope_2D_axial_4x4_cifar10(pretrained=False, **kwargs):
     )
     if pretrained:
         curr_dir = os.path.dirname(__file__)
-        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_4x4_cifar10.pth")
+        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_4x4_0_cifar10.pth")
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
 
 
 @register_model
-def vit_rope_2D_axial_5x5_cifar10(pretrained=False, **kwargs):
+def vit_rope_2D_axial_5x5_0_cifar10(pretrained=False, **kwargs):
     model = ViTRoPE(
         image_size=40, 
         patch_size=1, 
@@ -204,14 +204,14 @@ def vit_rope_2D_axial_5x5_cifar10(pretrained=False, **kwargs):
     )
     if pretrained:
         curr_dir = os.path.dirname(__file__)
-        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_5x5_cifar10.pth")
+        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_5x5_0_cifar10.pth")
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
 
 
 @register_model
-def vit_rope_2D_axial_6x6_cifar10(pretrained=False, **kwargs):
+def vit_rope_2D_axial_6x6_0_cifar10(pretrained=False, **kwargs):
     model = ViTRoPE(
         image_size=36, 
         patch_size=1, 
@@ -227,7 +227,7 @@ def vit_rope_2D_axial_6x6_cifar10(pretrained=False, **kwargs):
     )
     if pretrained:
         curr_dir = os.path.dirname(__file__)
-        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_6x6_cifar10.pth")
+        checkpoint = os.path.join(curr_dir, "model_registry/vit_rope_2D_axial_6x6_0_cifar10.pth")
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
