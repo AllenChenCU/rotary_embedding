@@ -6,3 +6,5 @@ scratch_vit.ipynb
 scratch_rotary.ipynb
 __pycache__/
 data/
+all_experiments_learning_curve.png
+experiment_3x3_learning_curve.png

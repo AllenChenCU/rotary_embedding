@@ -279,24 +279,3 @@ def vit_weighted_rope_2D_axial_4x4_cifar10(pretrained=False, **kwargs):
         state_dict = torch.load(checkpoint)
         model.load_state_dict(state_dict["net"])
     return model
-
-
-# @register_model
-# def vit_small_patch16_224_scratch(pretrained=False, **kwargs):
-#     model = VisionTransformer(
-#         patch_size=16,
-#         embed_dim=384, 
-#         depth=12, 
-#         num_heads=6, 
-#         mlp_ratio=4, 
-#         qkv_bias=True, 
-#         norm_layer=partial(nn.LayerNorm, eps=1e-6),
-#         **kwargs
-#     )
-#     model.default_cfg = _cfg()
-#     if pretrained:
-#         curr_dir = os.path.dirname(__file__)
-#         checkpoint = os.path.join(curr_dir, "model_registry/vit_small_path16_224.pth")
-#         state_dict = torch.load(checkpoint)
-#         model.load_state_dict(state_dict["net"])
-#     return model

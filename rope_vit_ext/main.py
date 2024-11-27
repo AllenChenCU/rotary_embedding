@@ -7,7 +7,6 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim import lr_scheduler
 import torch.backends.cudnn as cudnn
-#from torchvision import models
 import pandas as pd
 import structlog
 from timm.models import create_model

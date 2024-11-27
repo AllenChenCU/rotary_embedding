@@ -15,8 +15,7 @@ Run the following for help:
 $ python3 create_gcp_instance.py --help
 
 Example usage:
-$ python3 create_gcp_instance.py --project_id="high-performance-ml" --vm_name="my-lil-vm"
-python3 create_gcp_instance.py --project_id="ieor6617-hdml" --vm_name="instance-hdml-gpu"
+python3 create_gcp_instance.py --project_id="ieor6617-hdml" --vm_name="instance-hdml-gpu-4-1" --gpu_count=4 --disk_size=50
 """
 
 

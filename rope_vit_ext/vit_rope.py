@@ -1,3 +1,7 @@
+"""
+ViT model with RoPE mechanism implemented in PyTorch
+Modified from https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
+"""
 from itertools import combinations
 from functools import partial
 
@@ -337,4 +341,3 @@ class ViTRoPE(nn.Module):
 
         x = self.to_latent(x)
         return self.mlp_head(x)
-

@@ -1,3 +1,8 @@
+"""
+ViT model implemented in PyTorch
+Modified from https://github.com/lucidrains/vit-pytorch/blob/main/vit_pytorch/vit.py
+"""
+
 import torch
 from torch import nn, einsum
 
