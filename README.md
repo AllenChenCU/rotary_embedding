@@ -2,7 +2,7 @@
 
 Author: Allen Chen
 
-Problem statement: The goal of this task is to extend regular Rotary Positional Encodings (or RoPE), presented in particular in [Heo et al., 2024]. The regular Rotary Positional Encoding mechanism applies rotation matrices with 2x2 blocks constituting learnable Givens rotations (2-dimensional rotations in spaces spanned by canonical directions). Can you design and test (see: Problem 1) an extension of the RoPE mechanism that applies blocks of arbitrary sizes? Remember that you would like to preserve the relative positional encoding property: the resulting rotation matrix $R_{1}R^T$ should depend only on the delta-vectors between the coordinate vectors associated with the tokens.
+Problem statement (Extending RoPE mechanism): The goal of this task is to extend regular Rotary Positional Encodings (or RoPE), presented in particular in [Heo et al., 2024]. The regular Rotary Positional Encoding mechanism applies rotation matrices with 2x2 blocks constituting learnable Givens rotations (2-dimensional rotations in spaces spanned by canonical directions). Can you design and test (see: Problem 1) an extension of the RoPE mechanism that applies blocks of arbitrary sizes? Remember that you would like to preserve the relative positional encoding property: the resulting rotation matrix $R_{1}R^T$ should depend only on the delta-vectors between the coordinate vectors associated with the tokens.
 
 ## Design 
 
